@@ -2,7 +2,7 @@ class ApiConstants {
   static const String baseUrl = 'https://api.smartplug-io.tech/api';
 
   // Auth endpoints
-  static const String auth = '/Auth';
+  static const String auth = '/Auth/login';
 
   // Device endpoints
   static const String devices = '/devices';
@@ -19,4 +19,6 @@ class ApiConstants {
 
   static const String allDevices = '/Plugs/all-devices';
   static const String refreshToken = '/Auth/refreshToken';
+
+  static String plugStatus(String id) => '/Plugs/plug-status/$id';
 }

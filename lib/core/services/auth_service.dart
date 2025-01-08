@@ -9,7 +9,7 @@ class AuthService {
 
   Future<ApiResponse> login(String username, String password) async {
     try {
-      final response = await _apiService.post(
+      final response = await _apiService.login(
         endpoint: ApiConstants.auth,
         body: {
           'username': username,

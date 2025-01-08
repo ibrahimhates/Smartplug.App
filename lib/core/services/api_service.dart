@@ -57,16 +57,17 @@ class ApiService {
 
   Future<ApiResponse<T>> get<T>({
     required String endpoint,
+    Map<String, String>? queryParameters,
     T Function(Map<String, dynamic>)? fromJson,
     bool retry = true,
   }) async {
     try {
+      final uri = Uri.parse('${ApiConstants.baseUrl}$endpoint')
+          .replace(queryParameters: queryParameters);
+
       final response = await http.get(
-        Uri.parse('${ApiConstants.baseUrl}$endpoint'),
-        headers: {
-          ...ApiConstants.headers,
-          'Authorization': 'Bearer ${_storageService.getAuthToken()}',
-        },
+        uri,
+        headers: _headers,
       );
 
       if (response.statusCode == 200) {
@@ -78,7 +79,11 @@ class ApiService {
       } else if (response.statusCode == 401 && retry) {
         final refreshResponse = await _refreshToken();
         if (refreshResponse.success) {
-          return get(endpoint: endpoint, fromJson: fromJson, retry: false);
+          return get(
+              endpoint: endpoint,
+              queryParameters: queryParameters,
+              fromJson: fromJson,
+              retry: false);
         }
         return ApiResponse.error(
           'Oturum süresi doldu. Lütfen tekrar giriş yapın.',
@@ -97,7 +102,7 @@ class ApiService {
     }
   }
 
-  Future<ApiResponse<T>> post<T>({
+  Future<ApiResponse<T>> login<T>({
     required String endpoint,
     required dynamic body,
     T Function(Map<String, dynamic>)? fromJson,
@@ -106,10 +111,43 @@ class ApiService {
       final response = await http
           .post(
             Uri.parse('${ApiConstants.baseUrl}$endpoint'),
+            headers: ApiConstants.headers,
+            body: json.encode(body),
+          )
+          .timeout(const Duration(seconds: 10));
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+        if (fromJson != null) {
+          return ApiResponse.success(fromJson(jsonData));
+        }
+        return ApiResponse.success(jsonData);
+      } else {
+        return ApiResponse.error(
+            'HTTP Error ${response.statusCode}: ${response.body}');
+      }
+    } catch (e) {
+      return ApiResponse.error(e.toString());
+    }
+  }
+
+  Future<ApiResponse<T>> post<T>({
+    required String endpoint,
+    required dynamic body,
+    T Function(Map<String, dynamic>)? fromJson,
+  }) async {
+    try {
+      print('Request Body: ${json.encode(body)}');
+
+      final response = await http
+          .post(
+            Uri.parse('${ApiConstants.baseUrl}$endpoint'),
             headers: _headers,
             body: json.encode(body),
           )
           .timeout(const Duration(seconds: 10));
+
+      print('Response Status: ${response.statusCode}');
+      print('Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);

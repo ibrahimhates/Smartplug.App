@@ -28,4 +28,22 @@ class DeviceService {
 
     return response;
   }
+
+  Future<ApiResponse<String>> togglePlugStatus(
+      String deviceId, bool status) async {
+    final response = await _apiService.get<String>(
+      endpoint: ApiConstants.plugStatus(deviceId),
+      queryParameters: {'status': status.toString().toLowerCase()},
+      fromJson: (json) => json['message'] as String,
+    );
+
+    if (!response.success && response.errorType == ApiErrorType.unauthorized) {
+      navigatorKey.currentState?.pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        (route) => false,
+      );
+    }
+
+    return response;
+  }
 }
