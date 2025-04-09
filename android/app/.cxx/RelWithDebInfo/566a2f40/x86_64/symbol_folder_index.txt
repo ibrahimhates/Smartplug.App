@@ -1,0 +1,1 @@
+C:\Users\Serkan\Projects\bitirme\Smartplug.App\build\app\intermediates\cxx\RelWithDebInfo\566a2f40\obj\x86_64

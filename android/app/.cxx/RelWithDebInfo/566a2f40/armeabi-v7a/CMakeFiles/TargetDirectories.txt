@@ -1,0 +1,2 @@
+C:/Users/Serkan/Projects/bitirme/Smartplug.App/android/app/.cxx/RelWithDebInfo/566a2f40/armeabi-v7a/CMakeFiles/edit_cache.dir
+C:/Users/Serkan/Projects/bitirme/Smartplug.App/android/app/.cxx/RelWithDebInfo/566a2f40/armeabi-v7a/CMakeFiles/rebuild_cache.dir

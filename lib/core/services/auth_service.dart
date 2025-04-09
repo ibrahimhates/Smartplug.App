@@ -47,4 +47,9 @@ class AuthService {
     final token = _storageService.getAuthToken();
     return token != null;
   }
+
+  /// Diğer dosyalar tarafından da erişilebilmesi için statik getToken metodu eklendi.
+  static Future<String?> getToken() async {
+    return await StorageService().getAuthToken();
+  }
 }

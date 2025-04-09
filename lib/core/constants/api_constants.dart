@@ -1,24 +1,27 @@
 class ApiConstants {
-  static const String baseUrl = 'https://api.smartplug-io.tech/api';
+  static const String baseUrl = 'http://api.smartplug-io.tech/api';
 
   // Auth endpoints
   static const String auth = '/Auth/login';
+  static const String refreshToken = '/Auth/refreshToken';
 
   // Device endpoints
   static const String devices = '/devices';
   static const String networkDevices = '/devices/network';
+  static const String allDevices = '/Plugs/all-devices';
+  static String plugStatus(String id) => '/Plugs/plug-status/$id';
 
-  // Network endpoints
+
   static const String networks = '/networks';
+
+  static const String schedule = '/schedules';
+  
+
+  static String getSchedules(String deviceId) => '/schedules/device/$deviceId';
 
   // Headers
   static const Map<String, String> headers = {
     'Content-Type': 'application/json',
     'accept': '*/*',
   };
-
-  static const String allDevices = '/Plugs/all-devices';
-  static const String refreshToken = '/Auth/refreshToken';
-
-  static String plugStatus(String id) => '/Plugs/plug-status/$id';
 }
