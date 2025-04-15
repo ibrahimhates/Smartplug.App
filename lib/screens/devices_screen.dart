@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/device_model.dart';
 import '../core/services/device_service.dart';
+import '../core/services/signalr_service.dart';
 import '../main.dart';
-import 'dart:async';
 
 class DevicesScreen extends StatefulWidget {
   const DevicesScreen({super.key});
@@ -13,37 +13,34 @@ class DevicesScreen extends StatefulWidget {
 
 class _DevicesScreenState extends State<DevicesScreen> {
   final DeviceService _deviceService = DeviceService();
+  final SignalRService _signalRService = SignalRService();
   bool _isLoading = true;
   String? _error;
   List<Device> _devices = [];
-  Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
     _loadDevices();
-    Future.delayed(Duration.zero, () {
-      _refreshTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
-        if (mounted) {
-          _loadDevices();
-        }
-      });
-    });
+    _setupSignalR();
   }
 
   @override
   void dispose() {
-    _refreshTimer?.cancel();
+    _signalRService.stopConnection();
     super.dispose();
   }
 
+  Future<void> _setupSignalR() async {
+    await _signalRService.startConnection();
+    _signalRService.listenDeviceStatusChange(_loadDevices);
+  }
+
   Future<void> _loadDevices() async {
-    if (_devices.isEmpty) {
-      setState(() {
-        _isLoading = true;
-        _error = null;
-      });
-    }
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
 
     final response = await _deviceService.getDevices();
 
