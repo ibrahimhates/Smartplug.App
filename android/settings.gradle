@@ -18,7 +18,7 @@ pluginManagement {
 
 plugins {
     id "dev.flutter.flutter-plugin-loader" version "1.0.0"
-    // AGP sürümünü 8.2.1 veya daha üstü olacak java 21 üstü için eklendi
+
     id "com.android.application" version "8.2.1" apply false
     id "org.jetbrains.kotlin.android" version "1.8.22" apply false
 }

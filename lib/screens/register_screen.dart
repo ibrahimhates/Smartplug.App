@@ -25,7 +25,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse('http://api.smartplug-io.tech/register'),
+        Uri.parse('https://api.smartplug-io.tech/register'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'name': _nameController.text,

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../enums/api_error_type.dart';
 import '../../screens/login_screen.dart';
 import '../../main.dart';
+import 'auth_service.dart'; // AuthService'deki getToken metodunu kullanabilmek için import
 
 class DeviceService {
   final ApiService _apiService = ApiService();
@@ -45,5 +46,28 @@ class DeviceService {
     }
 
     return response;
+  }
+
+  /// Cihaz adını değiştirmek için PUT isteği gönderen metot
+  Future<ApiResponse<String>> editDeviceName({
+    required String deviceId,
+    required String newName,
+  }) async {
+    final body = {
+      'deviceId': deviceId,
+      'newName': newName,
+    };
+
+    try {
+      // Artık token parametresine gerek yok, _apiService.put metodu headers üzerinden token'ı ekliyor.
+      final response = await _apiService.put<String>(
+        endpoint: ApiConstants.editDevice,
+        body: body,
+        fromJson: (json) => json['message'] as String,
+      );
+      return response;
+    } catch (e) {
+      return ApiResponse.error(e.toString());
+    }
   }
 }

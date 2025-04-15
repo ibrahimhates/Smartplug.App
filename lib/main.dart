@@ -50,12 +50,11 @@ class _MainScreenState extends State<MainScreen> {
     _selectedIndex = widget.initialIndex;
   }
 
-  // Ekran listesine SchedulePage'i ekliyoruz:
+
   final List<Widget> _screens = [
     const DevicesScreen(),
     const NetworkScreen(),
     const SchedulePage(), // Yeni zaman ayarı ekranı
-    const ProfileScreen(),
     const SettingsScreen(),
   ];
 
@@ -102,10 +101,6 @@ class _MainScreenState extends State<MainScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.schedule),
             label: 'Zaman Ayarı', // Yeni sekme
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person),
-            label: 'Profil',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),

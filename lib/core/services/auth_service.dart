@@ -39,6 +39,28 @@ class AuthService {
     }
   }
 
+  Future<ApiResponse> editPassword({
+  required String currentPassword,
+  required String newPassword,
+}) async {
+  final body = {
+    'currentPassword': currentPassword,
+    'newPassword': newPassword,
+  };
+
+  try {
+    // Token bilgisi artık _apiService.put içinde _headers getter aracılığıyla otomatik ekleniyor.
+    final response = await _apiService.put(
+      endpoint: ApiConstants.editPass,
+      body: body,
+    );
+    return response;
+  } catch (e) {
+    return ApiResponse.error(e.toString());
+  }
+}
+
+
   Future<void> logout() async {
     await _storageService.clearTokens();
   }
@@ -48,7 +70,7 @@ class AuthService {
     return token != null;
   }
 
-  /// Diğer dosyalar tarafından da erişilebilmesi için statik getToken metodu eklendi.
+  /// Diğer dosyalar tarafından da erişilebilmesi için statik getToken metodu
   static Future<String?> getToken() async {
     return await StorageService().getAuthToken();
   }

@@ -164,5 +164,53 @@ class ApiService {
     }
   }
 
-  // Diğer HTTP metodları (GET, PUT, DELETE) buraya eklenebilir
+  /// PUT isteği gerçekleştiren metot
+  Future<ApiResponse<T>> put<T>({
+    required String endpoint,
+    required dynamic body,
+    T Function(Map<String, dynamic>)? fromJson,
+    bool retry = true,
+  }) async {
+    try {
+      final response = await http
+          .put(
+            Uri.parse('${ApiConstants.baseUrl}$endpoint'),
+            headers: _headers,
+            body: json.encode(body),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+        if (fromJson != null) {
+          return ApiResponse.success(fromJson(jsonData));
+        }
+        return ApiResponse.success(jsonData);
+      } else if (response.statusCode == 401 && retry) {
+        final refreshResponse = await _refreshToken();
+        if (refreshResponse.success) {
+          return put(
+              endpoint: endpoint,
+              body: body,
+              fromJson: fromJson,
+              retry: false);
+        }
+        return ApiResponse.error(
+          'Oturum süresi doldu. Lütfen tekrar giriş yapın.',
+          errorType: ApiErrorType.unauthorized,
+        );
+      }
+      return ApiResponse.error(
+        'HTTP Error ${response.statusCode}: ${response.body}',
+        errorType: ApiErrorType.fromStatusCode(response.statusCode),
+      );
+    } catch (e) {
+      return ApiResponse.error(
+        e.toString(),
+        errorType: ApiErrorType.networkError,
+      );
+    }
+  }
+
+
 }
