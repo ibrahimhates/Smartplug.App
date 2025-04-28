@@ -148,9 +148,6 @@ class ApiService {
           )
           .timeout(const Duration(seconds: 10));
 
-      print('Response Status: ${response.statusCode}');
-      print('Response Body: ${response.body}');
-
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
         if (fromJson != null) {
@@ -196,12 +193,14 @@ class ApiService {
           )
           .timeout(const Duration(seconds: 10));
 
-      if (response.statusCode == 200) {
-        final jsonData = json.decode(response.body);
-        if (fromJson != null) {
-          return ApiResponse.success(fromJson(jsonData));
+      if (response.statusCode == 200 || response.statusCode == 204) {
+      
+         if (fromJson == null) {
+          return ApiResponse.success(null);
         }
-        return ApiResponse.success(jsonData);
+        final jsonData = json.decode(response.body);
+       
+        return ApiResponse.success(fromJson(jsonData));
       } else if (response.statusCode == 401 && retry) {
         final refreshResponse = await _refreshToken();
         if (refreshResponse.success) {

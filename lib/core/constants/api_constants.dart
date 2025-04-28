@@ -10,9 +10,8 @@ class ApiConstants {
   static const String devices = '/devices';
   static const String networkDevices = '/devices/network';
   static const String allDevices = '/Plugs/all-devices';
+  static const String plugDevices = '/Plugs/devices'; // Yeni eklenen endpoint
   static String plugStatus(String id) => '/Plugs/plug-status/$id';
-  static const String editDevice =
-      '/devices/edit'; // Cihaz adı değiştirme endpoint'i
 
   static const String networks = '/networks';
 

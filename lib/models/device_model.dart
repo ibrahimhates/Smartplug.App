@@ -28,4 +28,24 @@ class Device {
       isOnline: json['isOnline'],
     );
   }
+  // İlgili Device sınıfına copyWith metodunu ekleyin
+  Device copyWith({
+    String? id,
+    String? name,
+    bool? isWorking,
+    bool? isOnline,
+    String? localIP,
+    String? mac,
+    String? serialNumber,
+  }) {
+    return Device(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      isWorking: isWorking ?? this.isWorking,
+      isOnline: isOnline ?? this.isOnline,
+      localIP: localIP ?? this.localIP,
+      mac: mac ?? this.mac,
+      serialNumber: serialNumber ?? this.serialNumber,
+    );
+  }
 }

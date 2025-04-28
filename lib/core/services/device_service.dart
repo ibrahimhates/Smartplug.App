@@ -51,20 +51,19 @@ class DeviceService {
   }
 
   /// Cihaz adını değiştirmek için PUT isteği gönderen metot
-  Future<ApiResponse<String>> editDeviceName({
+  Future<ApiResponse<NoContent>> editDeviceName({
     required String deviceId,
     required String newName,
   }) async {
     final body = {
-      'deviceId': deviceId,
-      'newName': newName,
+      'id': deviceId, // deviceId yerine id kullan
+      'name': newName, // newName yerine name kullan
     };
 
     try {
-      final response = await _apiService.put<String>(
-        endpoint: ApiConstants.editDevice,
+      final response = await _apiService.put<NoContent>(
+        endpoint: ApiConstants.plugDevices, // editDevice yerine plugDevices kullan
         body: body,
-        fromJson: (json) => json['message'] as String,
       );
 
       if (!response.success &&

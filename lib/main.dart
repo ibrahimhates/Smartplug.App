@@ -28,6 +28,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         useMaterial3: true,
       ),
+      debugShowCheckedModeBanner: false, // Debug bayrağını kaldır
       home:
           AuthService().isLoggedIn() ? const MainScreen() : const LoginScreen(),
     );
