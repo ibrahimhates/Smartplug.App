@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'screens/devices_screen.dart';
 import 'screens/network_screen.dart';
 import 'screens/schedule_page.dart';
-import 'screens/profile_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/login_screen.dart';
 import 'core/services/storage_service.dart';
@@ -28,7 +27,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         useMaterial3: true,
       ),
-      debugShowCheckedModeBanner: false, // Debug bayrağını kaldır
+      debugShowCheckedModeBanner: false,
       home:
           AuthService().isLoggedIn() ? const MainScreen() : const LoginScreen(),
     );

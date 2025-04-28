@@ -47,20 +47,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _devicesLoading = true;
       _devicesError = null;
     });
-    final response = await _deviceService.getDevices();
-    if (mounted) {
-      setState(() {
-        _devicesLoading = false;
-        if (response.success) {
-          _devices = response.data ?? [];
-          if (_devices.isNotEmpty) {
-            _selectedDevice = _devices.first;
-            _deviceNameController.text = _selectedDevice!.name;
+    
+    try {
+      final response = await _deviceService.getDevices();
+      if (mounted) {
+        setState(() {
+          _devicesLoading = false;
+          if (response.success) {
+            _devices = response.data ?? [];
+            if (_devices.isNotEmpty) {
+              _selectedDevice = _devices.first;
+              _deviceNameController.text = _selectedDevice!.name;
+            }
+          } else {
+            _devicesError = 'Bağlantı sağlanamadı.';
           }
-        } else {
-          _devicesError = response.error;
-        }
-      });
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _devicesLoading = false;
+          _devicesError = 'Bağlantı sağlanamadı.';
+        });
+      }
     }
   }
 
