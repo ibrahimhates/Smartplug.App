@@ -13,7 +13,7 @@ class ApiResponse<T> {
     this.errorType,
   });
 
-  factory ApiResponse.success(T data) {
+  factory ApiResponse.success(T? data) {
     return ApiResponse(
       data: data,
       success: true,
@@ -27,4 +27,8 @@ class ApiResponse<T> {
       errorType: errorType,
     );
   }
+}
+
+class NoContent {
+  NoContent();
 }

@@ -2,10 +2,12 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../models/api_response.dart';
 import '../services/storage_service.dart';
+import 'package:network_info_plus/network_info_plus.dart';
 
 class NetworkService {
   static const String deviceBaseUrl = 'http://192.168.4.1';
   final StorageService _storageService = StorageService();
+  final NetworkInfo _networkInfo = NetworkInfo();
 
   String? _getUserIdFromToken() {
     final token = _storageService.getAuthToken();
@@ -69,6 +71,18 @@ class NetworkService {
       }
     } catch (e) {
       return ApiResponse.error(e.toString());
+    }
+  }
+
+  Future<ApiResponse<bool>> isConnectedToSmartPlug() async {
+    try {
+      final wifiName = await _networkInfo.getWifiGatewayIP();
+      print('Bağlı olduğunuz WiFi: $wifiName');
+      print(wifiName == "192.168.4.1");
+      return ApiResponse(success: wifiName == "192.168.4.1");
+    } catch (e) {
+      print('WiFi bilgisi alınamadı: $e');
+      return ApiResponse(success: false);
     }
   }
 }

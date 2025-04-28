@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'screens/devices_screen.dart';
 import 'screens/network_screen.dart';
-import 'screens/schedule_page.dart'; // Yeni eklenen sayfa
+import 'screens/schedule_page.dart';
 import 'screens/profile_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/login_screen.dart';
@@ -18,7 +18,7 @@ void main() async {
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-  
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -28,7 +28,8 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         useMaterial3: true,
       ),
-      home: AuthService().isLoggedIn() ? const MainScreen() : const LoginScreen(),
+      home:
+          AuthService().isLoggedIn() ? const MainScreen() : const LoginScreen(),
     );
   }
 }
@@ -50,11 +51,10 @@ class _MainScreenState extends State<MainScreen> {
     _selectedIndex = widget.initialIndex;
   }
 
-
   final List<Widget> _screens = [
     const DevicesScreen(),
     const NetworkScreen(),
-    const SchedulePage(), // Yeni zaman ayarı ekranı
+    const SchedulePage(),
     const SettingsScreen(),
   ];
 
@@ -63,7 +63,7 @@ class _MainScreenState extends State<MainScreen> {
       _selectedIndex = index;
     });
   }
-  
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -100,7 +100,7 @@ class _MainScreenState extends State<MainScreen> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.schedule),
-            label: 'Zaman Ayarı', // Yeni sekme
+            label: 'Zaman Ayarı',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.settings),

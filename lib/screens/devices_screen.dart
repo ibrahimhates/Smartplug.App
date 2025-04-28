@@ -42,17 +42,26 @@ class _DevicesScreenState extends State<DevicesScreen> {
       _error = null;
     });
 
-    final response = await _deviceService.getDevices();
+    try {
+      final response = await _deviceService.getDevices();
 
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-        if (response.success) {
-          _devices = response.data ?? [];
-        } else {
-          _error = response.error;
-        }
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          if (response.success) {
+            _devices = response.data ?? [];
+          } else {
+            _error = 'Bağlantı sağlanamadı';
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _error = 'Bağlantı sağlanamadı';
+        });
+      }
     }
   }
 
@@ -208,27 +217,40 @@ class _DevicesScreenState extends State<DevicesScreen> {
                       ElevatedButton.icon(
                         onPressed: device.isOnline
                             ? () async {
-                                final response =
-                                    await _deviceService.togglePlugStatus(
-                                  device.id,
-                                  !device.isWorking,
-                                );
+                                try {
+                                  final response =
+                                      await _deviceService.togglePlugStatus(
+                                    device.id,
+                                    !device.isWorking,
+                                  );
 
-                                if (!mounted) return;
+                                  if (!mounted) return;
+                                  print(
+                                      "RESPONSEEE  DURUM: ${response.success}");
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(response.success
+                                          ? ('İşlem başarılı')
+                                          : 'Bağlantı sağlanamadı'),
+                                      backgroundColor: response.success
+                                          ? Colors.green
+                                          : Colors.red,
+                                    ),
+                                  );
 
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content:
-                                        Text(response.data ?? 'İşlem başarılı'),
-                                    backgroundColor: response.success
-                                        ? Colors.green
-                                        : Colors.red,
-                                  ),
-                                );
-
-                                // Listeyi yenile
-                                if (response.success) {
-                                  _loadDevices();
+                                  // Listeyi yenile
+                                  if (response.success) {
+                                    _loadDevices();
+                                  }
+                                } catch (e) {
+                                  if (!mounted) return;
+                                  print("ERROR : $e");
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Bağlantı sağlanamadı'),
+                                      backgroundColor: Colors.red,
+                                    ),
+                                  );
                                 }
                               }
                             : null,

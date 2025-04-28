@@ -1,5 +1,5 @@
 class ApiConstants {
-  static const String baseUrl = 'https://api.smartplug-io.tech/api';
+  static const String baseUrl = 'http://api.smartplug-io.tech/api';
 
   // Auth endpoints
   static const String auth = '/Auth/login';
@@ -11,7 +11,8 @@ class ApiConstants {
   static const String networkDevices = '/devices/network';
   static const String allDevices = '/Plugs/all-devices';
   static String plugStatus(String id) => '/Plugs/plug-status/$id';
-  static const String editDevice = '/devices/edit'; // Cihaz adı değiştirme endpoint'i
+  static const String editDevice =
+      '/devices/edit'; // Cihaz adı değiştirme endpoint'i
 
   static const String networks = '/networks';
 

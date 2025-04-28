@@ -21,6 +21,7 @@ class DeviceService {
     );
 
     if (!response.success && response.errorType == ApiErrorType.unauthorized) {
+      await AuthService().logout();
       navigatorKey.currentState?.pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const LoginScreen()),
         (route) => false,
@@ -30,15 +31,16 @@ class DeviceService {
     return response;
   }
 
-  Future<ApiResponse<String>> togglePlugStatus(
+  Future<ApiResponse<NoContent>> togglePlugStatus(
       String deviceId, bool status) async {
-    final response = await _apiService.get<String>(
+    final response = await _apiService.get<NoContent>(
       endpoint: ApiConstants.plugStatus(deviceId),
       queryParameters: {'status': status.toString().toLowerCase()},
-      fromJson: (json) => json['message'] as String,
     );
+    print("RESPONSEEE : ${response.success}");
 
     if (!response.success && response.errorType == ApiErrorType.unauthorized) {
+      await AuthService().logout();
       navigatorKey.currentState?.pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const LoginScreen()),
         (route) => false,
@@ -59,12 +61,21 @@ class DeviceService {
     };
 
     try {
-      // Artık token parametresine gerek yok, _apiService.put metodu headers üzerinden token'ı ekliyor.
       final response = await _apiService.put<String>(
         endpoint: ApiConstants.editDevice,
         body: body,
         fromJson: (json) => json['message'] as String,
       );
+
+      if (!response.success &&
+          response.errorType == ApiErrorType.unauthorized) {
+        await AuthService().logout();
+        navigatorKey.currentState?.pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          (route) => false,
+        );
+      }
+
       return response;
     } catch (e) {
       return ApiResponse.error(e.toString());

@@ -38,9 +38,9 @@ class SignalRService {
 
     try {
       // SignalR hub URL'i
-      final hubUrl = 'https://api.smartplug-io.tech/devicehub';
+      final hubUrl = 'http://api.smartplug-io.tech/devicehub';
 
-      // Token getirme
+      // Token getirmeaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
       final token = _storageService.getAuthToken();
       if (token == null) {
         throw Exception('Kullanıcı oturum açmamış');

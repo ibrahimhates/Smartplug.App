@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../core/services/network_service.dart';
+import '../core/constants/app_constants.dart';
 
 class NetworkScreen extends StatefulWidget {
   const NetworkScreen({super.key});
@@ -13,11 +14,48 @@ class _NetworkScreenState extends State<NetworkScreen> {
   bool _isLoading = true;
   String? _error;
   List<String> _networks = [];
+  bool _isConnectedToSmartPlug = false;
 
   @override
   void initState() {
     super.initState();
-    _scanNetworks();
+    AppConstants.isInAPMode = true;
+    _checkConnection();
+  }
+
+  @override
+  void dispose() {
+    AppConstants.isInAPMode = false;
+    super.dispose();
+  }
+
+  Future<void> _checkConnection() async {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final response = await _networkService.isConnectedToSmartPlug();
+
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isConnectedToSmartPlug = response.success;
+        });
+      }
+
+      if (_isConnectedToSmartPlug) {
+        _scanNetworks();
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _error = 'Bağlantı sağlanamadı';
+        });
+      }
+    }
   }
 
   Future<void> _scanNetworks() async {
@@ -26,17 +64,26 @@ class _NetworkScreenState extends State<NetworkScreen> {
       _error = null;
     });
 
-    final response = await _networkService.getNetworks();
+    try {
+      final response = await _networkService.getNetworks();
 
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-        if (response.success) {
-          _networks = response.data ?? [];
-        } else {
-          _error = response.error;
-        }
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          if (response.success) {
+            _networks = response.data ?? [];
+          } else {
+            _error = 'Bağlantı sağlanamadı';
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _error = 'Bağlantı sağlanamadı';
+        });
+      }
     }
   }
 
@@ -93,31 +140,42 @@ class _NetworkScreenState extends State<NetworkScreen> {
 
                           setState(() => isConnecting = true);
 
-                          final response = await _networkService.connectToWifi(
-                            ssid,
-                            passwordController.text,
-                          );
+                          try {
+                            final response =
+                                await _networkService.connectToWifi(
+                              ssid,
+                              passwordController.text,
+                            );
 
-                          if (!mounted) return;
+                            if (!mounted) return;
 
-                          setState(() => isConnecting = false);
+                            setState(() => isConnecting = false);
 
-                          if (response.success) {
-                            Navigator.pop(context);
+                            if (response.success) {
+                              Navigator.pop(context);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Bağlantı başarılı. Lütfen kendi WiFi ağınıza bağlanıp Cihazlarım sayfasına gidiniz.',
+                                  ),
+                                  backgroundColor: Colors.green,
+                                  duration: Duration(seconds: 5),
+                                ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Bağlantı sağlanamadı'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            if (!mounted) return;
+                            setState(() => isConnecting = false);
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content: Text(
-                                  'Bağlantı başarılı. Lütfen kendi WiFi ağınıza bağlanıp Cihazlarım sayfasına gidiniz.',
-                                ),
-                                backgroundColor: Colors.green,
-                                duration: Duration(seconds: 5),
-                              ),
-                            );
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content:
-                                    Text(response.error ?? 'Bağlantı hatası'),
+                                content: Text('Bağlantı sağlanamadı'),
                                 backgroundColor: Colors.red,
                               ),
                             );
@@ -162,6 +220,30 @@ class _NetworkScreenState extends State<NetworkScreen> {
       );
     }
 
+    if (!_isConnectedToSmartPlug) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              'Lütfen cihazı aktifleştirip',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'WiFi ağına bağlanın',
+              style: TextStyle(color: Colors.grey),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _checkConnection,
+              child: const Text('Yeniden Dene'),
+            ),
+          ],
+        ),
+      );
+    }
+
     if (_error != null) {
       return Center(
         child: Column(
@@ -174,8 +256,8 @@ class _NetworkScreenState extends State<NetworkScreen> {
             ),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: _scanNetworks,
-              child: const Text('Yeniden Tara'),
+              onPressed: _checkConnection,
+              child: const Text('Yeniden Dene'),
             ),
           ],
         ),

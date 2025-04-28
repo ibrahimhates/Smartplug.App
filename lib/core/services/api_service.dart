@@ -71,11 +71,11 @@ class ApiService {
       );
 
       if (response.statusCode == 200) {
-        final jsonData = json.decode(response.body);
-        if (fromJson != null) {
-          return ApiResponse.success(fromJson(jsonData));
+        if (fromJson == null) {
+          return ApiResponse.success(null);
         }
-        return ApiResponse.success(jsonData as T);
+        final jsonData = json.decode(response.body);
+        return ApiResponse.success(fromJson(jsonData));
       } else if (response.statusCode == 401 && retry) {
         final refreshResponse = await _refreshToken();
         if (refreshResponse.success) {
@@ -95,6 +95,7 @@ class ApiService {
         errorType: ApiErrorType.fromStatusCode(response.statusCode),
       );
     } catch (e) {
+      print("RESPOINSE BASE : ${e}");
       return ApiResponse.error(
         e.toString(),
         errorType: ApiErrorType.networkError,
@@ -134,6 +135,7 @@ class ApiService {
     required String endpoint,
     required dynamic body,
     T Function(Map<String, dynamic>)? fromJson,
+    bool retry = true,
   }) async {
     try {
       print('Request Body: ${json.encode(body)}');
@@ -155,12 +157,26 @@ class ApiService {
           return ApiResponse.success(fromJson(jsonData));
         }
         return ApiResponse.success(jsonData);
-      } else {
+      } else if (response.statusCode == 401 && retry) {
+        final refreshResponse = await _refreshToken();
+        if (refreshResponse.success) {
+          return post(
+              endpoint: endpoint, body: body, fromJson: fromJson, retry: false);
+        }
         return ApiResponse.error(
-            'HTTP Error ${response.statusCode}: ${response.body}');
+          'Oturum süresi doldu. Lütfen tekrar giriş yapın.',
+          errorType: ApiErrorType.unauthorized,
+        );
       }
+      return ApiResponse.error(
+        'HTTP Error ${response.statusCode}: ${response.body}',
+        errorType: ApiErrorType.fromStatusCode(response.statusCode),
+      );
     } catch (e) {
-      return ApiResponse.error(e.toString());
+      return ApiResponse.error(
+        e.toString(),
+        errorType: ApiErrorType.networkError,
+      );
     }
   }
 
@@ -190,10 +206,7 @@ class ApiService {
         final refreshResponse = await _refreshToken();
         if (refreshResponse.success) {
           return put(
-              endpoint: endpoint,
-              body: body,
-              fromJson: fromJson,
-              retry: false);
+              endpoint: endpoint, body: body, fromJson: fromJson, retry: false);
         }
         return ApiResponse.error(
           'Oturum süresi doldu. Lütfen tekrar giriş yapın.',
@@ -211,6 +224,4 @@ class ApiService {
       );
     }
   }
-
-
 }
