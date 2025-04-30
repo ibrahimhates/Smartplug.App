@@ -123,6 +123,7 @@ class _SchedulePageState extends State<SchedulePage>
 
   // --- Tek Seferlik İşlemler ---
   Future<void> pickOneTimeDateTime() async {
+
     final date = await showDatePicker(
       context: context,
       initialDate: oneTimeDateTime ?? DateTime.now(),
@@ -150,6 +151,8 @@ class _SchedulePageState extends State<SchedulePage>
     }
     final token = await AuthService.getToken();
     final url = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.schedule}');
+    print("MErhaba");
+
     // Yerel zamanı UTC'ye dönüştürüyoruz
     final body = jsonEncode({
       "deviceId": selectedDevice,
@@ -213,6 +216,17 @@ class _SchedulePageState extends State<SchedulePage>
     return "$hour:$minute:00";
   }
 
+String timeOfDayToUtcTimeSpanString(TimeOfDay time) {
+  // UTC+3 olduğunu varsay (manuel)
+  final localTime = DateTime(0, 1, 1, time.hour, time.minute); // tarih önemsiz
+  final utcTime = localTime.subtract(Duration(hours: 3)); // UTC = UTC+3 - 3
+
+  final hour = utcTime.hour.toString().padLeft(2, '0');
+  final minute = utcTime.minute.toString().padLeft(2, '0');
+  final second = utcTime.second.toString().padLeft(2, '0');
+
+  return "$hour:$minute:$second";
+}
   Future<void> submitRecurringSchedule() async {
     if (selectedDay == null ||
         recurringStartTime == null ||
@@ -233,12 +247,20 @@ class _SchedulePageState extends State<SchedulePage>
     };
     final token = await AuthService.getToken();
     final url = Uri.parse('${ApiConstants.baseUrl}${ApiConstants.schedule}');
+    print("SELECTED DEVICE : $selectedDevice");
+    print("SELECTED DAY : $selectedDay");
+    print("RECURRING START TIME : ${recurringStartTime}");
+    print("RECURRING END TIME : ${recurringEndTime}");
+    print("DAY MAP : ${dayMap[selectedDay]}");
+    print("TIME OF DAY TO TIME SPAN STRING : ${timeOfDayToUtcTimeSpanString(recurringStartTime!)}");
+    print("TIME OF DAY TO TIME SPAN STRING : ${timeOfDayToUtcTimeSpanString(recurringEndTime!)}");
+
     final body = jsonEncode({
       "deviceId": selectedDevice,
       "type": 1, // Recurring
       "recurringDay": dayMap[selectedDay],
-      "startTimeOfDay": timeOfDayToTimeSpanString(recurringStartTime!),
-      "endTimeOfDay": timeOfDayToTimeSpanString(recurringEndTime!),
+      "startTimeOfDay": timeOfDayToUtcTimeSpanString(recurringStartTime!),
+      "endTimeOfDay": timeOfDayToUtcTimeSpanString(recurringEndTime!),
     });
     final response = await http.post(
       url,
@@ -498,10 +520,14 @@ class _SchedulePageState extends State<SchedulePage>
     
     final startTime = schedule['startTimeOfDay'] ?? "-";
     final endTime = schedule['endTimeOfDay'] ?? "-";
+
+    // startTime ve endTime'ı UTC-3'e çevirmek
+    final startDateTime = parseTime(startTime)?.subtract(Duration(hours: -3));
+    final endDateTime = parseTime(endTime)?.subtract(Duration(hours: -3));
     return Card(
       child: ListTile(
         title: Text("Cihaz $deviceName - Gün: $dayName"),
-        subtitle: Text("Başlangıç: $startTime\nBitiş: $endTime"),
+        subtitle: Text("Başlangıç: ${formatTimeOnly(startDateTime)}\nBitiş: ${formatTimeOnly(endDateTime)}"),
       ),
     );
   },
@@ -533,4 +559,29 @@ class _SchedulePageState extends State<SchedulePage>
       ),
     );
   }
+}
+
+DateTime? parseTime(String time) {
+  try {
+    final parts = time.split(':');
+    if (parts.length == 3) {
+      final hour = int.parse(parts[0]);
+      final minute = int.parse(parts[1]);
+      final second = int.parse(parts[2]);
+      return DateTime(0, 1, 1, hour, minute, second); // Tarih önemsiz
+    }
+  } catch (e) {
+    print("parseTime error: $e");
+  }
+  return null;
+}
+
+String formatTimeOnly(DateTime? dateTime) {
+  if (dateTime == null) return "-";
+  
+  // Saat ve dakikayı formatla (hh:mm)
+  final hour = dateTime.hour.toString().padLeft(2, '0');
+  final minute = dateTime.minute.toString().padLeft(2, '0');
+  
+  return "$hour:$minute";
 }
