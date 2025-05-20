@@ -3,6 +3,7 @@ class ApiConstants {
 
   // Auth endpoints
   static const String auth = '/Auth/login';
+  static const String register = '/Auth/register';
   static const String refreshToken = '/Auth/refreshToken';
   static const String editPass = '/editPass'; // Şifre değiştirme endpoint'i
 
@@ -10,7 +11,7 @@ class ApiConstants {
   static const String devices = '/devices';
   static const String networkDevices = '/devices/network';
   static const String allDevices = '/Plugs/all-devices';
-  static const String plugDevices = '/Plugs/devices'; // Yeni eklenen endpoint
+  static const String plugDevices = '/Plugs/device'; // Yeni eklenen endpoint
   static String plugStatus(String id) => '/Plugs/plug-status/$id';
 
   static const String networks = '/networks';

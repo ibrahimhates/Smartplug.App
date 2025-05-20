@@ -223,4 +223,46 @@ class ApiService {
       );
     }
   }
+
+  Future<ApiResponse<T>> delete<T>({
+    required String endpoint,
+    T Function(Map<String, dynamic>)? fromJson,
+    bool retry = true,
+  }) async {
+    try {
+      final response = await http
+          .delete(
+            Uri.parse('${ApiConstants.baseUrl}$endpoint'),
+            headers: _headers,
+          )
+          .timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
+        if (fromJson == null) {
+          return ApiResponse.success(null);
+        }
+        final jsonData = json.decode(response.body);
+        return ApiResponse.success(fromJson(jsonData));
+      } else if (response.statusCode == 401 && retry) {
+        final refreshResponse = await _refreshToken();
+        if (refreshResponse.success) {
+          return delete(
+              endpoint: endpoint, fromJson: fromJson, retry: false);
+        }
+        return ApiResponse.error(
+          'Oturum süresi doldu. Lütfen tekrar giriş yapın.',
+          errorType: ApiErrorType.unauthorized,
+        );
+      }
+      return ApiResponse.error(
+        'HTTP Error ${response.statusCode}: ${response.body}',
+        errorType: ApiErrorType.fromStatusCode(response.statusCode),
+      );
+    } catch (e) {
+      return ApiResponse.error(
+        e.toString(),
+        errorType: ApiErrorType.networkError,
+      );
+    }
+  }
 }

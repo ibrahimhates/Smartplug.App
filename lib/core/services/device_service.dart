@@ -80,4 +80,39 @@ class DeviceService {
       return ApiResponse.error(e.toString());
     }
   }
+
+  Future<ApiResponse<NoContent>> deleteDevice(String deviceId) async {
+    try {
+      print("Silme isteği gönderiliyor...");
+      print("Endpoint: ${ApiConstants.plugDevices}/$deviceId");
+      
+      final response = await _apiService.delete<NoContent>(
+        endpoint: '${ApiConstants.plugDevices}/$deviceId',
+      );
+      
+      print("API Yanıtı:");
+      print("Başarılı mı: ${response.success}");
+      print("Hata: ${response.error}");
+      print("Hata Tipi: ${response.errorType}");
+      print("Data: ${response.data}");
+
+      if (!response.success && response.errorType == ApiErrorType.unauthorized) {
+        await AuthService().logout();
+        navigatorKey.currentState?.pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          (route) => false,
+        );
+      }
+
+      if (!response.success) {
+        return ApiResponse.error("Şu anda gerçekleştirilemiyor");
+      }
+
+      return response;
+    } catch (e) {
+      print("Silme işlemi sırasında hata oluştu:");
+      print("Hata detayı: $e");
+      return ApiResponse.error("Şu anda gerçekleştirilemiyor");
+    }
+  }
 }

@@ -60,6 +60,46 @@ class AuthService {
   }
 }
 
+  Future<ApiResponse> register({
+    required String name,
+    required String surname,
+    required String username,
+    required String email,
+    required String password,
+  }) async {
+    try {
+      final response = await _apiService.post(
+        endpoint: ApiConstants.register,
+        body: {
+          'name': name,
+          'surname': surname,
+          'username': username,
+          'email': email,
+          'password': password,
+        },
+      );
+
+      if (response.success && response.data != null) {
+        final data = response.data['data'];
+        if (data != null) {
+          final token = data['token'];
+          final refreshToken = data['refreshToken'];
+
+          if (token != null && refreshToken != null) {
+            await _storageService.setTokens(
+              authToken: token,
+              refreshToken: refreshToken,
+            );
+            _apiService.setToken(token);
+          }
+        }
+      }
+
+      return response;
+    } catch (e) {
+      return ApiResponse.error(e.toString());
+    }
+  }
 
   Future<void> logout() async {
     await _storageService.clearTokens();

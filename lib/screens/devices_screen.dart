@@ -204,174 +204,242 @@ class _DevicesScreenState extends State<DevicesScreen> {
                   ],
                   const SizedBox(height: 8),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       TextButton.icon(
                         onPressed: () {
-                          // Cihaz adını değiştirmek için dialog göster
-                          final TextEditingController nameController = TextEditingController(text: device.name);
-                          
+                          // Silme onay dialogu göster
                           showDialog(
                             context: context,
-                            builder: (context) {
-                              bool isLoading = false;
-                              
-                              return StatefulBuilder(
-                                builder: (context, setState) => AlertDialog(
-                                  title: const Text('Cihaz Adını Değiştir'),
-                                  content: Container(
-                                    width: double.maxFinite, // Dialog genişliğini artır
-                                    child: TextField(
-                                      controller: nameController,
-                                      decoration: const InputDecoration(
-                                        labelText: 'Cihaz Adı',
-                                        border: OutlineInputBorder(),
-                                      ),
-                                      autofocus: true,
-                                    ),
-                                  ),
-                                  contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: isLoading ? null : () => Navigator.of(context).pop(),
-                                      child: const Text('İptal'),
-                                    ),
-                                    ElevatedButton(
-                                      onPressed: isLoading 
-                                          ? null 
-                                          : () async {
-                                              if (nameController.text.trim().isNotEmpty) {
-                                                // Dialog üzerinde yükleniyor göster
-                                                setState(() {
-                                                  isLoading = true;
-                                                });
-                                                
-                                                try {
-                                                  // API çağrısı
-                                                  final response = await _deviceService.editDeviceName(
-                                                    deviceId: device.id,
-                                                    newName: nameController.text.trim(),
-                                                  );
-
-                                                  if (response.success) {
-                                                    // API çağrısı başarılıysa UI'da güncelle
-                                                    this.setState(() {
-                                                      final updatedDevices = [..._devices];
-                                                      final deviceIndex = updatedDevices.indexWhere((d) => d.id == device.id);
-                                                      if (deviceIndex != -1) {
-                                                        updatedDevices[deviceIndex] = updatedDevices[deviceIndex].copyWith(
-                                                          name: nameController.text.trim(),
-                                                        );
-                                                        _devices = updatedDevices;
-                                                      }
-                                                    });
-                                                    
-                                                    // Başarılıysa dialog'u kapat
-                                                    Navigator.of(context).pop();
-                                                    
-                                                    // Başarı mesajı göster
-                                                    ScaffoldMessenger.of(context).showSnackBar(
-                                                      const SnackBar(
-                                                        content: Text('Cihaz adı başarıyla değiştirildi'),
-                                                        backgroundColor: Colors.green,
-                                                      ),
-                                                    );
-                                                  } else {
-                                                    // İşlem başarısızsa dialog üzerinde hata göster
-                                                    setState(() {
-                                                      isLoading = false;
-                                                    });
-                                                    
-                                                    ScaffoldMessenger.of(context).showSnackBar(
-                                                      SnackBar(
-                                                        content: Text('İşlem başarısız oldu. Lütfen daha sonra tekrar deneyin.'),
-                                                        backgroundColor: Colors.red,
-                                                      ),
-                                                    );
-                                                  }
-                                                } catch (e) {
-                                                  // Hata durumunda dialog üzerinde hata göster
-                                                  setState(() {
-                                                    isLoading = false;
-                                                  });
-                                                  
-                                                  ScaffoldMessenger.of(context).showSnackBar(
-                                                    SnackBar(
-                                                      content: Text('Hata: $e'),
-                                                      backgroundColor: Colors.red,
-                                                    ),
-                                                  );
-                                                }
-                                              }
-                                            },
-                                      child: isLoading
-                                          ? const SizedBox(
-                                              width: 20,
-                                              height: 20,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                                color: Colors.white,
-                                              ),
-                                            )
-                                          : const Text('Kaydet'),
-                                    ),
-                                  ],
+                            builder: (context) => AlertDialog(
+                              title: const Text('Cihazı Sil'),
+                              content: const Text('Bu cihazı silmek istediğinizden emin misiniz?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  child: const Text('İptal'),
                                 ),
-                              );
-                            },
+                                ElevatedButton(
+                                  onPressed: () async {
+                                    final scaffoldMessenger = ScaffoldMessenger.of(context);
+                                    Navigator.of(context).pop();
+                                    
+                                    try {
+                                      final response = await _deviceService.deleteDevice(device.id);
+                                      
+                                      if (response.success) {
+                                        // Başarılı silme işlemi
+                                        scaffoldMessenger.showSnackBar(
+                                          const SnackBar(
+                                            content: Text('Cihaz başarıyla silindi'),
+                                            backgroundColor: Colors.green,
+                                          ),
+                                        );
+                                        // Listeyi yenile
+                                        _loadDevices();
+                                      } else {
+                                        // Detaylı hata mesajı göster
+                                        String errorMessage = 'Cihaz silinemedi';
+                                        if (response.error != null) {
+                                          errorMessage += ': ${response.error}';
+                                        }
+                                        if (response.errorType != null) {
+                                          errorMessage += '\nHata Tipi: ${response.errorType}';
+                                        }
+                                        
+                                        scaffoldMessenger.showSnackBar(
+                                          SnackBar(
+                                            content: Text(errorMessage),
+                                            backgroundColor: Colors.red,
+                                            duration: const Duration(seconds: 5),
+                                          ),
+                                        );
+                                      }
+                                    } catch (e) {
+                                      scaffoldMessenger.showSnackBar(
+                                        SnackBar(
+                                          content: Text('Beklenmeyen bir hata oluştu: $e'),
+                                          backgroundColor: Colors.red,
+                                          duration: const Duration(seconds: 5),
+                                        ),
+                                      );
+                                    }
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.red,
+                                  ),
+                                  child: const Text('Sil'),
+                                ),
+                              ],
+                            ),
                           );
                         },
-                        icon: const Icon(Icons.settings),
-                        label: const Text('Düzenle'),
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        label: const Text('Sil', style: TextStyle(color: Colors.red)),
                       ),
-                      const SizedBox(width: 8),
-                      ElevatedButton.icon(
-                        onPressed: device.isOnline
-                            ? () async {
-                                try {
-                                  final response =
-                                      await _deviceService.togglePlugStatus(
-                                    device.id,
-                                    !device.isWorking,
-                                  );
+                      Row(
+                        children: [
+                          TextButton.icon(
+                            onPressed: () {
+                              // Cihaz adını değiştirmek için dialog göster
+                              final TextEditingController nameController = TextEditingController(text: device.name);
+                              
+                              showDialog(
+                                context: context,
+                                builder: (context) {
+                                  bool isLoading = false;
+                                  
+                                  return StatefulBuilder(
+                                    builder: (context, setState) => AlertDialog(
+                                      title: const Text('Cihaz Adını Değiştir'),
+                                      content: Container(
+                                        width: double.maxFinite,
+                                        child: TextField(
+                                          controller: nameController,
+                                          decoration: const InputDecoration(
+                                            labelText: 'Cihaz Adı',
+                                            border: OutlineInputBorder(),
+                                          ),
+                                          autofocus: true,
+                                        ),
+                                      ),
+                                      contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: isLoading ? null : () => Navigator.of(context).pop(),
+                                          child: const Text('İptal'),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: isLoading 
+                                              ? null 
+                                              : () async {
+                                                  if (nameController.text.trim().isNotEmpty) {
+                                                    setState(() {
+                                                      isLoading = true;
+                                                    });
+                                                    
+                                                    try {
+                                                      final response = await _deviceService.editDeviceName(
+                                                        deviceId: device.id,
+                                                        newName: nameController.text.trim(),
+                                                      );
 
-                                  if (!mounted) return;
-                                  print(
-                                      "RESPONSEEE  DURUM: ${response.success}");
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(response.success
-                                          ? ('İşlem başarılı')
-                                          : 'Bağlantı sağlanamadı'),
-                                      backgroundColor: response.success
-                                          ? Colors.green
-                                          : Colors.red,
+                                                      if (response.success) {
+                                                        this.setState(() {
+                                                          final updatedDevices = [..._devices];
+                                                          final deviceIndex = updatedDevices.indexWhere((d) => d.id == device.id);
+                                                          if (deviceIndex != -1) {
+                                                            updatedDevices[deviceIndex] = updatedDevices[deviceIndex].copyWith(
+                                                              name: nameController.text.trim(),
+                                                            );
+                                                            _devices = updatedDevices;
+                                                          }
+                                                        });
+                                                        
+                                                        Navigator.of(context).pop();
+                                                        
+                                                        ScaffoldMessenger.of(context).showSnackBar(
+                                                          const SnackBar(
+                                                            content: Text('Cihaz adı başarıyla değiştirildi'),
+                                                            backgroundColor: Colors.green,
+                                                          ),
+                                                        );
+                                                      } else {
+                                                        setState(() {
+                                                          isLoading = false;
+                                                        });
+                                                        
+                                                        ScaffoldMessenger.of(context).showSnackBar(
+                                                          SnackBar(
+                                                            content: Text('İşlem başarısız oldu. Lütfen daha sonra tekrar deneyin.'),
+                                                            backgroundColor: Colors.red,
+                                                          ),
+                                                        );
+                                                      }
+                                                    } catch (e) {
+                                                      setState(() {
+                                                        isLoading = false;
+                                                      });
+                                                      
+                                                      ScaffoldMessenger.of(context).showSnackBar(
+                                                        SnackBar(
+                                                          content: Text('Hata: $e'),
+                                                          backgroundColor: Colors.red,
+                                                        ),
+                                                      );
+                                                    }
+                                                  }
+                                                },
+                                          child: isLoading
+                                              ? const SizedBox(
+                                                  width: 20,
+                                                  height: 20,
+                                                  child: CircularProgressIndicator(
+                                                    strokeWidth: 2,
+                                                    color: Colors.white,
+                                                  ),
+                                                )
+                                              : const Text('Kaydet'),
+                                        ),
+                                      ],
                                     ),
                                   );
+                                },
+                              );
+                            },
+                            icon: const Icon(Icons.settings),
+                            label: const Text('Düzenle'),
+                          ),
+                          const SizedBox(width: 8),
+                          ElevatedButton.icon(
+                            onPressed: device.isOnline
+                                ? () async {
+                                    try {
+                                      final response =
+                                          await _deviceService.togglePlugStatus(
+                                        device.id,
+                                        !device.isWorking,
+                                      );
 
-                                  // Listeyi yenile
-                                  if (response.success) {
-                                    _loadDevices();
+                                      if (!mounted) return;
+                                      print(
+                                          "RESPONSEEE  DURUM: ${response.success}");
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text(response.success
+                                              ? ('İşlem başarılı')
+                                              : 'Bağlantı sağlanamadı'),
+                                          backgroundColor: response.success
+                                              ? Colors.green
+                                              : Colors.red,
+                                        ),
+                                      );
+
+                                      // Listeyi yenile
+                                      if (response.success) {
+                                        _loadDevices();
+                                      }
+                                    } catch (e) {
+                                      if (!mounted) return;
+                                      print("ERROR : $e");
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                          content: Text('Bağlantı sağlanamadı'),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                    }
                                   }
-                                } catch (e) {
-                                  if (!mounted) return;
-                                  print("ERROR : $e");
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Bağlantı sağlanamadı'),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
-                                }
-                              }
-                            : null,
-                        icon: Icon(
-                          device.isWorking
-                              ? Icons.power_settings_new
-                              : Icons.power_off,
-                          color: device.isWorking ? Colors.red : Colors.green,
-                        ),
-                        label: Text(device.isWorking ? 'Kapat' : 'Aç'),
+                                : null,
+                            icon: Icon(
+                              device.isWorking
+                                  ? Icons.power_settings_new
+                                  : Icons.power_off,
+                              color: device.isWorking ? Colors.red : Colors.green,
+                            ),
+                            label: Text(device.isWorking ? 'Kapat' : 'Aç'),
+                          ),
+                        ],
                       ),
                     ],
                   ),
